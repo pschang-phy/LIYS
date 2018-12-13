@@ -53,7 +53,7 @@ The Example proto contains the following fields:
 import math
 import os.path
 import sys
-import build_data
+from deeplab.datasets import build_data
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS

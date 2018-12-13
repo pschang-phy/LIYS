@@ -26,6 +26,9 @@ from deeplab.utils import input_generator
 from deeplab.utils import train_utils
 from deployment import model_deploy
 
+import os
+import json
+
 slim = tf.contrib.slim
 
 prefetch_queue = slim.prefetch_queue
@@ -33,6 +36,10 @@ prefetch_queue = slim.prefetch_queue
 flags = tf.app.flags
 
 FLAGS = flags.FLAGS
+
+
+flags.DEFINE_string('config', None,
+                    'The config file for training')
 
 # Settings for multi-GPUs/multi-replicas training.
 
@@ -226,6 +233,20 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
 
 
 def main(unused_argv):
+
+  if FLAGS.config and os.path.isfile(FLAGS.config):
+    with open(FLAGS.config) as f:
+      trainingConfig = json.load(f)
+      for key in trainingConfig:
+        if key in FLAGS:
+          FLAGS[key].value = trainingConfig[key]
+
+  assert FLAGS.dataset_dir, (
+      'flag --dataset_dir=None: Flag --dataset_dir must be specified.')
+
+  assert FLAGS.train_logdir, (
+      'flag --train_logdir=None: Flag --train_logdir must be specified.')
+
   tf.logging.set_verbosity(tf.logging.INFO)
   # Set up deployment (i.e., multi-GPUs and/or multi-replicas).
   config = model_deploy.DeploymentConfig(
@@ -388,7 +409,4 @@ def main(unused_argv):
 
 
 if __name__ == '__main__':
-  flags.mark_flag_as_required('train_logdir')
-  flags.mark_flag_as_required('tf_initial_checkpoint')
-  flags.mark_flag_as_required('dataset_dir')
   tf.app.run()
