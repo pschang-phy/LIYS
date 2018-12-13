@@ -1,0 +1,13 @@
+This folder is a sample Deeplab training
+
+====== How to train ======
+Prerequisite
+* Download 'VOC2012_Person' dataset from Google share folder
+* Decompress 'VOC2012_Person.tar.bz2'
+    $ tar -jx -f VOC2012_Person.tar.bz2
+* Activate 'Segmentation' working environment
+    $ source Segmentation/bin/activate.sh
+* Generate tfrecord (Refer to README in VOC2012_Person)
+
+Start to train
+$ python ${TOP}/Segmentation/bin/train.py --config=voc2012_Person.json
