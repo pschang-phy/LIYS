@@ -68,7 +68,8 @@ _ITEMS_TO_DESCRIPTIONS = {
 # Named tuple to describe the dataset properties.
 DatasetDescriptor = collections.namedtuple(
     'DatasetDescriptor',
-    ['splits_to_sizes',   # Splits of the dataset into training, val, and test.
+    ['name',
+     'splits_to_sizes',   # Splits of the dataset into training, val, and test.
      'num_classes',   # Number of semantic classes, including the background
                       # class (if exists). For example, there are 20
                       # foreground classes + 1 background class in the PASCAL
@@ -76,6 +77,9 @@ DatasetDescriptor = collections.namedtuple(
      'ignore_label',  # Ignore label value.
     ]
 )
+
+DatasetDescriptor.__new__.__defaults__ = (None,) * len(DatasetDescriptor._fields)
+
 
 _CITYSCAPES_INFORMATION = DatasetDescriptor(
     splits_to_sizes={
@@ -123,7 +127,7 @@ def get_cityscapes_dataset_name():
   return 'cityscapes'
 
 
-def get_dataset(dataset_name, split_name, dataset_dir):
+def get_dataset(datasetDescriptor, split_name, dataset_dir):
   """Gets an instance of slim Dataset.
 
   Args:
@@ -137,17 +141,19 @@ def get_dataset(dataset_name, split_name, dataset_dir):
   Raises:
     ValueError: if the dataset_name or split_name is not recognized.
   """
-  if dataset_name not in _DATASETS_INFORMATION:
-    raise ValueError('The specified dataset is not supported yet.')
+  if isinstance(datasetDescriptor, str):
+    if datasetDescriptor not in _DATASETS_INFORMATION:
+      raise ValueError('The specified dataset is not supported yet.')
+    datasetDescriptor = _DATASETS_INFORMATION[datasetDescriptor]
 
-  splits_to_sizes = _DATASETS_INFORMATION[dataset_name].splits_to_sizes
+  splits_to_sizes = datasetDescriptor.splits_to_sizes
 
   if split_name not in splits_to_sizes:
     raise ValueError('data split name %s not recognized' % split_name)
 
   # Prepare the variables for different datasets.
-  num_classes = _DATASETS_INFORMATION[dataset_name].num_classes
-  ignore_label = _DATASETS_INFORMATION[dataset_name].ignore_label
+  num_classes = datasetDescriptor.num_classes
+  ignore_label = datasetDescriptor.ignore_label
 
   file_pattern = _FILE_PATTERN
   file_pattern = os.path.join(dataset_dir, file_pattern % split_name)
@@ -194,5 +200,5 @@ def get_dataset(dataset_name, split_name, dataset_dir):
       items_to_descriptions=_ITEMS_TO_DESCRIPTIONS,
       ignore_label=ignore_label,
       num_classes=num_classes,
-      name=dataset_name,
+      name=datasetDescriptor.name,
       multi_label=True)

@@ -234,12 +234,20 @@ def _build_deeplab(inputs_queue, outputs_to_num_classes, ignore_label):
 
 def main(unused_argv):
 
+  datasetDescriptor = None
   if FLAGS.config and os.path.isfile(FLAGS.config):
     with open(FLAGS.config) as f:
       trainingConfig = json.load(f)
       for key in trainingConfig:
         if key in FLAGS:
           FLAGS[key].value = trainingConfig[key]
+        elif key == 'DatasetDescriptor':
+          datasetDescriptor = segmentation_dataset.DatasetDescriptor(
+                                name=trainingConfig[key]['name'],
+                                splits_to_sizes=trainingConfig[key]['splits_to_sizes'],
+                                num_classes=trainingConfig[key]['num_classes'],
+                                ignore_label=trainingConfig[key]['ignore_label'],
+                              )
 
   assert FLAGS.dataset_dir, (
       'flag --dataset_dir=None: Flag --dataset_dir must be specified.')
@@ -262,9 +270,12 @@ def main(unused_argv):
 
   clone_batch_size = FLAGS.train_batch_size // config.num_clones
 
+  if datasetDescriptor is None:
+    datasetDescriptor = FLAGS.dataset
+
   # Get dataset-dependent information.
   dataset = segmentation_dataset.get_dataset(
-      FLAGS.dataset, FLAGS.train_split, dataset_dir=FLAGS.dataset_dir)
+      datasetDescriptor, FLAGS.train_split, dataset_dir=FLAGS.dataset_dir)
 
   tf.gfile.MakeDirs(FLAGS.train_logdir)
   tf.logging.info('Training on %s set', FLAGS.train_split)
