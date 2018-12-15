@@ -10,5 +10,15 @@
     "min_scale_factor" : 1.0,
     "max_scale_factor" : 1.0,
     "fine_tune_batch_norm" : true,
-    "training_number_of_steps" : 100
+    "training_number_of_steps" : 100,
+
+    "DatasetDescriptor" : {
+        "name" : "voc12_person",
+        "splits_to_sizes" : {
+            "trainval" : 887
+        },
+
+        "num_classes" : 2,
+        "ignore_label" : 255
+    }
 } 
