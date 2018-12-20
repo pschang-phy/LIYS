@@ -77,8 +77,8 @@ tf.app.flags.DEFINE_string(
     './tfrecord',
     'Path to save converted SSTable of TensorFlow examples.')
 
-
-_NUM_SHARDS = 4
+tf.app.flags.DEFINE_integer('num_shards', 4,
+                            'The number of shards to split dataset')
 
 
 def _convert_dataset(dataset_split):
@@ -94,15 +94,15 @@ def _convert_dataset(dataset_split):
   sys.stdout.write('Processing ' + dataset)
   filenames = [x.strip('\n') for x in open(dataset_split, 'r')]
   num_images = len(filenames)
-  num_per_shard = int(math.ceil(num_images / float(_NUM_SHARDS)))
+  num_per_shard = int(math.ceil(num_images / float(FLAGS.num_shards)))
 
   image_reader = build_data.ImageReader('jpeg', channels=3)
   label_reader = build_data.ImageReader('png', channels=1)
 
-  for shard_id in range(_NUM_SHARDS):
+  for shard_id in range(FLAGS.num_shards):
     output_filename = os.path.join(
         FLAGS.output_dir,
-        '%s-%05d-of-%05d.tfrecord' % (dataset, shard_id, _NUM_SHARDS))
+        '%s-%05d-of-%05d.tfrecord' % (dataset, shard_id, FLAGS.num_shards))
     with tf.python_io.TFRecordWriter(output_filename) as tfrecord_writer:
       start_idx = shard_id * num_per_shard
       end_idx = min((shard_id + 1) * num_per_shard, num_images)
