@@ -20,7 +20,7 @@ then
     unset PYTHONPATH
 
     rm -f ${BINDIR}/train.py \
-          ${BINDIR}/build_voc2012_data.py \
+          ${BINDIR}/convert2tfrecord.py \
           ${BINDIR}/remove_gt_colormap.py
 
     unset BINDIR
