@@ -3,6 +3,10 @@ This folder is a sample Deeplab training
 ====== How to train ======
 Prerequisite
 * Download 'VOC2012_Person' dataset from Google share folder
+    $ wget --no-check-certificate \
+        "https://drive.google.com/uc?export=download&id=1kRat4AROmm8St8956Os4kAlbJnH9_UaJ" \
+        -O VOC2012_Person.tar.bz2
+
 * Decompress 'VOC2012_Person.tar.bz2'
     $ tar -jx -f VOC2012_Person.tar.bz2
 * Activate 'Segmentation' working environment
@@ -10,16 +14,19 @@ Prerequisite
 * Generate tfrecord (Refer to README in VOC2012_Person)
 
 * Start to train
-$ python ${TOP}/Segmentation/bin/train.py --config=voc2012_Person.json
+    $ python ${TOP}/Segmentation/bin/train.py --config=voc2012_Person.json
+
+* Evaluate the result
+    $ python ${TOP}/Segmentation/bin/eval.py --config=voc2012_Person_eval.json
 
 * Export inference PB file from checkpoints
-$ python ${TOP}/Segmentation/bin/export_model.py        \
-    --logtostderr                                       \
-    --model_variant="mobilenet_v2"                      \
-    --checkpoint_path=eval/model.ckpt-100               \
-    --export_path=./frozen_inference_graph.pb \
-    --num_classes=2                                     \
-    --crop_size=513                                     \
-    --crop_size=513                                     \
-    --inference_scales=1.0                              \
-    --depth_multiplier=0.5
+    $ python ${TOP}/Segmentation/bin/export_model.py  \
+        --logtostderr                                 \
+        --model_variant="mobilenet_v2"                \
+        --checkpoint_path=eval/model.ckpt-100         \
+        --export_path=./frozen_inference_graph.pb     \
+        --num_classes=2                               \
+        --crop_size=513                               \
+        --crop_size=513                               \
+        --inference_scales=1.0                        \
+        --depth_multiplier=0.5

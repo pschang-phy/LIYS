@@ -1,16 +1,12 @@
 {
-    "train_split" : "train",
+    "eval_split" : "val",
     "model_variant" : "mobilenet_v2",
-    "train_logdir" : "eval",
+    "checkpoint_dir" : "./eval",
     "dataset_dir" : "VOC2012_Person/tfrecord",
-    "output_stride" : 16,
-    "train_crop_size" : [513, 513],
-    "train_batch_size" : 16,
+    "eval_crop_size" : [513, 513],
     "depth_multiplier" : 0.5,
-    "min_scale_factor" : 1.0,
-    "max_scale_factor" : 1.0,
-    "fine_tune_batch_norm" : true,
-    "training_number_of_steps" : 100,
+    "max_number_of_evaluations": 1,
+    "eval_logdir" : ".",
 
     "DatasetDescriptor" : {
         "name" : "voc12_person",
