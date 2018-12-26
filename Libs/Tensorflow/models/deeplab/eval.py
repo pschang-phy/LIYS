@@ -25,11 +25,19 @@ from deeplab import model
 from deeplab.datasets import segmentation_dataset
 from deeplab.utils import input_generator
 
+import os
+import json
+
+
 slim = tf.contrib.slim
 
 flags = tf.app.flags
 
 FLAGS = flags.FLAGS
+
+
+flags.DEFINE_string('config', None,
+                    'The config file for training')
 
 flags.DEFINE_string('master', '', 'BNS name of the tensorflow server')
 
@@ -83,10 +91,41 @@ flags.DEFINE_integer('max_number_of_evaluations', 0,
 
 
 def main(unused_argv):
+
+  datasetDescriptor = None
+  if FLAGS.config and os.path.isfile(FLAGS.config):
+    with open(FLAGS.config) as f:
+      trainingConfig = json.load(f)
+      for key in trainingConfig:
+        if key in FLAGS:
+          FLAGS[key].value = trainingConfig[key]
+        elif key == 'DatasetDescriptor':
+          datasetDescriptor = segmentation_dataset.DatasetDescriptor(
+                                name=trainingConfig[key]['name'],
+                                splits_to_sizes=trainingConfig[key]['splits_to_sizes'],
+                                num_classes=trainingConfig[key]['num_classes'],
+                                ignore_label=trainingConfig[key]['ignore_label'],
+                              )
+
+  assert FLAGS.checkpoint_dir, (
+      'flag --checkpoint_dir=None: Flag --checkpoint_dir must be specified.')
+
+  assert FLAGS.eval_logdir, (
+      'flag --eval_logdir=None: Flag --eval_logdir must be specified.')
+
+  assert FLAGS.dataset_dir, (
+      'flag --dataset_dir=None: Flag --dataset_dir must be specified.')
+
   tf.logging.set_verbosity(tf.logging.INFO)
+
+  if datasetDescriptor is None:
+    datasetDescriptor = FLAGS.dataset
+
+  print(datasetDescriptor)
+
   # Get dataset-dependent information.
   dataset = segmentation_dataset.get_dataset(
-      FLAGS.dataset, FLAGS.eval_split, dataset_dir=FLAGS.dataset_dir)
+      datasetDescriptor, FLAGS.eval_split, dataset_dir=FLAGS.dataset_dir)
 
   tf.gfile.MakeDirs(FLAGS.eval_logdir)
   tf.logging.info('Evaluating on %s set', FLAGS.eval_split)
@@ -170,7 +209,4 @@ def main(unused_argv):
 
 
 if __name__ == '__main__':
-  flags.mark_flag_as_required('checkpoint_dir')
-  flags.mark_flag_as_required('eval_logdir')
-  flags.mark_flag_as_required('dataset_dir')
   tf.app.run()
