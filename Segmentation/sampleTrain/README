@@ -9,5 +9,17 @@ Prerequisite
     $ source Segmentation/bin/activate.sh
 * Generate tfrecord (Refer to README in VOC2012_Person)
 
-Start to train
+* Start to train
 $ python ${TOP}/Segmentation/bin/train.py --config=voc2012_Person.json
+
+* Export inference PB file from checkpoints
+$ python ${TOP}/Segmentation/bin/export_model.py        \
+    --logtostderr                                       \
+    --model_variant="mobilenet_v2"                      \
+    --checkpoint_path=eval/model.ckpt-100               \
+    --export_path=./frozen_inference_graph.pb \
+    --num_classes=2                                     \
+    --crop_size=513                                     \
+    --crop_size=513                                     \
+    --inference_scales=1.0                              \
+    --depth_multiplier=0.5
