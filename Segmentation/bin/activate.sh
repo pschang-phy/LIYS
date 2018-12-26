@@ -19,6 +19,7 @@ then
 
     ln -s ${TOP}/Libs/Tensorflow/models/deeplab/train.py ${BINDIR}
     ln -s ${TOP}/Libs/Tensorflow/models/deeplab/export_model.py ${BINDIR}
+    ln -s ${TOP}/Libs/Tensorflow/models/deeplab/eval.py ${BINDIR}
     ln -s ${TOP}/Libs/Tensorflow/models/deeplab/datasets/build_voc2012_data.py ${BINDIR}/convert2tfrecord.py
     ln -s ${TOP}/Libs/Tensorflow/models/deeplab/datasets/remove_gt_colormap.py ${BINDIR}
 

@@ -22,7 +22,8 @@ then
     rm -f ${BINDIR}/train.py \
           ${BINDIR}/convert2tfrecord.py \
           ${BINDIR}/remove_gt_colormap.py \
-          ${BINDIR}/export_model.py
+          ${BINDIR}/export_model.py \
+          ${BINDIR}/eval.py
 
     unset BINDIR
     unset DIR
