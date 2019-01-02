@@ -1,6 +1,5 @@
 from __future__ import print_function
-import sys, os, pdb
-sys.path.insert(0, 'src')
+import os, pdb
 import numpy as np, scipy.misc 
 from optimize import optimize
 from argparse import ArgumentParser
