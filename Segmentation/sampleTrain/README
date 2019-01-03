@@ -30,3 +30,31 @@ Prerequisite
         --crop_size=513                               \
         --inference_scales=1.0                        \
         --depth_multiplier=0.5
+
+* Transform Graph - 1
+    $transform_graph \
+        --in_graph=frozen_inference_graph.pb \
+        --out_graph=frozen_inference_graph_transformed.pb \
+        --inputs="sub_7" \
+        --outputs="ArgMax" \
+        --transforms='fold_batch_norms fold_old_batch_norms strip_unused_nodes(type=float, shape="1,513,513,3")'
+
+* Transform Graph - 2
+    $ transform_graph \
+        --in_graph=frozen_inference_graph_transformed.pb \
+        --out_graph=frozen_inference_graph_transformed_2.pb \
+        --inputs="sub_7" \
+        --outputs="ArgMax" \
+        --transforms='fold_constants flatten_atrous_conv remove_device merge_duplicate_nodes fold_batch_norms fold_old_batch_norms strip_unused_nodes(type=float, shape="1,513,513,3")'
+
+
+* Convert to TFLITE
+    $ tflite_convert \
+        --graph_def_file=frozen_inference_graph_transformed_2.pb \
+        --output_file=deeplab.tflite \
+        --inference_type=FLOAT \
+        --inference_input_type=FLOAT \
+        --input_shape=1,513,513,3 \
+        --input_array=sub_7 \
+        --output_array=ArgMax \
+        --output_format=TFLITE
