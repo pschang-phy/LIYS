@@ -19,9 +19,8 @@ then
 
     unset PYTHONPATH
 
-    rm -f ${BINDIR}/evaluate.py \
-          ${BINDIR}/transform_video.py \
-          ${BINDIR}/style.py
+    rm -f ${BINDIR}/eval.py \
+          ${BINDIR}/train.py
 
     unset BINDIR
     unset DIR

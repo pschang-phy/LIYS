@@ -15,13 +15,11 @@ then
     done
 
     TOP=${DIR}
-    PYTHONPATH=$PYTHONPATH:${TOP}/Libs/Tensorflow/fast-style-transfer
-    PYTHONPATH=$PYTHONPATH:${TOP}/Libs/Tensorflow/fast-style-transfer/src
+    PYTHONPATH=$PYTHONPATH:${TOP}/Libs/Tensorflow/FastStyleTransfer
     export PYTHONPATH
 
-    ln -s ${TOP}/Libs/Tensorflow/fast-style-transfer/evaluate.py ${BINDIR}
-    ln -s ${TOP}/Libs/Tensorflow/fast-style-transfer/transform_video.py ${BINDIR}
-    ln -s ${TOP}/Libs/Tensorflow/fast-style-transfer/style.py ${BINDIR}
+    ln -s ${TOP}/Libs/Tensorflow/FastStyleTransfer/train.py ${BINDIR}
+    ln -s ${TOP}/Libs/Tensorflow/FastStyleTransfer/eval.py ${BINDIR}
 
     unset BINDIR
     unset DIR
