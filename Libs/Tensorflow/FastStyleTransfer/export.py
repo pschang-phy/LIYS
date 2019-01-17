@@ -1,84 +1,105 @@
 # coding: utf-8
-from __future__ import print_function
 import tensorflow as tf
-import argparse
-import time
-import os
+from tensorflow.python.saved_model import signature_constants
+from tensorflow.python.saved_model import tag_constants
 
 import model
 import utils
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--model_file', help='the path to the model file')
-    parser.add_argument('-n', '--model_name', default='transfer', help='the name of the model')
-    parser.add_argument('-d', dest='is_debug', action='store_true')
-    parser.set_defaults(is_debug=False)
-    return parser.parse_args()
+flags = tf.app.flags
+
+FLAGS = flags.FLAGS
 
 
-def main(args):
-    g = tf.Graph()      # A new graph
-    with g.as_default():
-        with tf.Session() as sess:
-            # Building graph.
-            image_data = tf.placeholder(tf.int32, name='input_image')
-            height = tf.placeholder(tf.int32, name='height')
-            width = tf.placeholder(tf.int32, name='width')
+flags.DEFINE_string('checkpoint_path', None, 'Checkpoint path')
 
-            # Reshape data
-            image = tf.reshape(image_data, [height, width, 3])
+flags.DEFINE_string('export_path', "frozen_inference_graph.pb",
+                    'Path to output Tensorflow frozen graph')
 
-            processed_image = utils.mean_image_subtraction(
-                image, [123.68, 116.779, 103.939])                    # Preprocessing image
-            batched_image = tf.expand_dims(processed_image, 0)        # Add batch dimension
-            generated_image = model.net(batched_image, training=False)
-            casted_image = tf.cast(generated_image, tf.int32)
-            # Remove batch dimension
-            squeezed_image = tf.squeeze(casted_image, [0])
-            cropped_image = tf.slice(squeezed_image, [0, 0, 0], [height, width, 3])
-            # stylized_image = tf.image.encode_jpeg(squeezed_image, name='output_image')
-            stylized_image_data = tf.reshape(cropped_image, [-1], name='output_image')
+flags.DEFINE_string('saved_model_version', None,
+                    'The version of exported savedModel')
 
-            # Restore model variables.
-            saver = tf.train.Saver(tf.global_variables(), write_version=tf.train.SaverDef.V1)
-            sess.run([tf.global_variables_initializer(), tf.local_variables_initializer()])
-            # Use absolute path.
-            model_file = os.path.abspath(args.model_file)
-            saver.restore(sess, model_file)
 
-            if args.is_debug:
-                content_file = '/Users/Lex/Desktop/t.jpg'
-                generated_file = '/Users/Lex/Desktop/xwz-stylized.jpg'
+# Input name of the exported model.
+_INPUT_NAME = 'InputImage'
 
-                with open(generated_file, 'wb') as img:
-                    image_bytes = tf.read_file(content_file)
-                    input_array, decoded_image = sess.run([
-                        tf.reshape(tf.image.decode_jpeg(image_bytes, channels=3), [-1]),
-                        tf.image.decode_jpeg(image_bytes, channels=3)])
+# Output name of the exported model.
+_OUTPUT_NAME = 'StyledImage'
 
-                    start_time = time.time()
-                    img.write(sess.run(tf.image.encode_jpeg(tf.cast(cropped_image, tf.uint8)), feed_dict={
-                              image_data: input_array,
-                              height: decoded_image.shape[0],
-                              width: decoded_image.shape[1]}))
-                    end_time = time.time()
 
-                    tf.logging.info('Elapsed time: %fs' % (end_time - start_time))
-            else:
-                output_graph_def = tf.graph_util.convert_variables_to_constants(
-                    sess, sess.graph_def, output_node_names=['output_image'])
+def main(unused_argv):
+    tf.logging.set_verbosity(tf.logging.INFO)
 
-                with tf.gfile.FastGFile('/Users/Lex/Desktop/' + args.model_name + '.pb', mode='wb') as f:
-                    f.write(output_graph_def.SerializeToString())
+    with tf.Graph().as_default(), tf.Session() as sess:
+        # Building graph.
+        inputTensor = None
+        if FLAGS.saved_model_version is not None:
+            inputTensor = tf.placeholder(shape=[], dtype=tf.string, name=_INPUT_NAME)
+            decoded_bytes = tf.io.decode_base64(inputTensor)
+            image_data = tf.image.decode_image(decoded_bytes, channels=3)
+        else:
+            image_data = tf.placeholder(tf.uint8, shape=(None, None, 3), name=_INPUT_NAME)
+            inputTensor = image_data
 
-                # tf.train.write_graph(g.as_graph_def(), '/Users/Lex/Desktop',
-                #                      args.model_name + '.pb', as_text=False)
+        image_shape = tf.shape(image_data)
+
+        # Preprocessing image
+        processed_image = utils.mean_image_subtraction(image_data,
+                                                       [123.68, 116.779, 103.939])
+
+        # Add batch dimension
+        batched_image = tf.expand_dims(processed_image, 0)
+        generated_image = model.net(batched_image, training=False)
+        casted_image = tf.cast(generated_image, tf.uint8)
+
+        # Remove batch dimension
+        squeezed_image = tf.squeeze(casted_image, [0])
+
+        cropped_image = tf.slice(squeezed_image, [0, 0, 0], image_shape)
+
+
+        # Restore model variables.
+        saver = tf.train.Saver()
+        saver.restore(sess, FLAGS.checkpoint_path)
+
+
+        if FLAGS.saved_model_version is not None:
+            builder = tf.saved_model.builder.SavedModelBuilder("style/Servo/" + FLAGS.saved_model_version)
+
+            # Creates the TensorInfo protobuf objects that encapsulates the input/output tensors
+            tensor_info_input = tf.saved_model.utils.build_tensor_info(inputTensor)
+
+            # output tensor info
+            styled_image = tf.image.encode_png(cropped_image, name=_OUTPUT_NAME)
+            tensor_info_output = tf.saved_model.utils.build_tensor_info(styled_image)
+
+            sigs = {}
+            sigs[signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY] = \
+                tf.saved_model.signature_def_utils.build_signature_def(
+                    inputs = {"input" : tensor_info_input},
+                    outputs = {"output_bytes" : tensor_info_output},
+                    method_name=tf.saved_model.signature_constants.PREDICT_METHOD_NAME
+                )
+
+            builder.add_meta_graph_and_variables(sess,
+                                                 [tag_constants.SERVING],
+                                                 signature_def_map=sigs,
+                                                 clear_devices=True)
+
+            builder.save()
+
+        else:
+            styled_image = tf.identity(cropped_image, name=_OUTPUT_NAME)
+
+            output_graph_def = tf.graph_util.convert_variables_to_constants(sess,
+                                                                            sess.graph_def,
+                                                                            output_node_names=[_OUTPUT_NAME])
+
+            with tf.gfile.FastGFile(FLAGS.export_path, mode='wb') as f:
+                f.write(output_graph_def.SerializeToString())
 
 
 if __name__ == '__main__':
-    tf.logging.set_verbosity(tf.logging.INFO)
-    args = parse_args()
-    print(args)
-    main(args)
+    flags.mark_flag_as_required('checkpoint_path')
+    tf.app.run()
