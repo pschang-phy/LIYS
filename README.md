@@ -18,11 +18,14 @@ In this code base, it maintains the code for two model-related tasks
 
 In the top folder, it has subdirectories
 * Libs
-    > The required libraries or model code will be in here. For example, because we use DeeplabV3+ model and Slim library from Tensorflow, a copy of their code base will be placed in here.
+
+    The required libraries or model code will be in here. For example, because we use DeeplabV3+ model and Slim library from Tensorflow, a copy of their code base will be placed in here.
 * Segmentation
-    > This could be a workspace for the preparation of segmentation model. It may contains the training, validation, test tools.
+
+    This could be a workspace for the preparation of segmentation model. It may contains the training, validation, test tools.
 * StyleTransfer
-    > Similar to Segmentation folder, this folder is a workspace for the preparation of style transfer model.
+
+    Similar to Segmentation folder, this folder is a workspace for the preparation of style transfer model.
 
 ## Workspace Environment
 
