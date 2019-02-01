@@ -4,17 +4,17 @@ from pycocotools.coco import COCO
 import numpy as np
 import skimage.io as io
 import os, sys
-import cv2
+from PIL import Image
 
 
 # The path for annotation file
-annFile = '../../annotations/instances_train2017.json'
+annFile = 'annotations/instances_train2017.json'
 
 # The save path for JPEG image
-JPEGImagesPath = '/home/jovyan/Projects/COCO17_Person/JPEGImages'
+JPEGImagesPath = 'COCO17_Person/JPEGImages'
 
 # The save path for mask PNG image
-SegmentationClassPath = '/home/jovyan/Projects/COCO17_Person/SegmentationClass'
+SegmentationClassPath = 'COCO17_Person/SegmentationClass'
 
 
 # Initialize COCO api for instance annotations
@@ -27,6 +27,23 @@ imgIds = coco.getImgIds(catIds=catIds)
 print("Total number of images: {}".format(len(imgIds)))
 
 images = coco.loadImgs(imgIds)
+
+
+palette=[]
+for i in range(256):
+    palette.extend((i,i,i))
+
+palette[:3*10]=np.array([[0, 0, 0],
+                         [128, 0, 0],
+                         [0, 128, 0],
+                         [128, 128, 0],
+                         [0, 0, 128],
+                         [128, 0, 128],
+                         [0, 128, 128],
+                         [128, 128, 128],
+                         [64, 0, 0],
+                         [192, 0, 0]], dtype='uint8').flatten()
+
 for img in images:
     filename = img['coco_url'].split('/')[-1]
 
@@ -47,9 +64,10 @@ for img in images:
         mask = (mask | coco.annToMask(ann))
 
     count = np.sum(mask)
-    mask = np.stack([mask * 0, mask * 0, mask * 128], axis=2)
+    im = Image.fromarray(mask)
+    im.putpalette(palette)
 
-    cv2.imwrite(SegmentationClassPath + '/' + os.path.splitext(filename)[0] + '.png', mask)
+    im.save(SegmentationClassPath + '/' + os.path.splitext(filename)[0] + '.png')
 
     info = [os.path.splitext(filename)[0], I.shape[0], I.shape[1], len(anns), count / (I.shape[0] * I.shape[1]) * 100]
     print(','.join(list(map(str, info))))
