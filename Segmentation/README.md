@@ -176,28 +176,34 @@ We exploit [COCO API](https://github.com/cocodataset/cocoapi) to access and proc
 
 #### How to install COCO API?
 1. Download COCO API
+
     ```Bash
     $ git clone https://github.com/cocodataset/cocoapi.git
     ```
 2. Change to **PythonAPI** folder
+
     ```Bash
     $ cd cocoapi/PythonAPI
     ```
 3. Modify the Makefile as below, to install module into your local path
+
     ```Bash
     python setup.py build_ext install --user
     ```
 4. Install COCO API Python module
+
     ```Bash
     $ make install
     ```
 
 #### Prepare the annotation files for COCO 2017 dataset
 1. Download annotation files from
+
     ```Bash
     $ wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
     ```
 2. Unzip it
+
     ```Bash
     $ unzip annotations_trainval2017.zip
     ```
@@ -210,18 +216,22 @@ The script tool is at **Segmentation/bin/cocoDownload.py**.
 The steps is as below
 * Modify the related pathes in cocoDownload.py script
     * The path for annotation file
+
         ```
         annFile = 'annotations/instances_train2017.json'
         ```
     * The output path for JPEG image
+
         ```
         JPEGImagesPath = 'COCO17_Person/JPEGImages'
         ```
     * The output path for mask PNG image
+
         ```
         SegmentationClassPath = 'COCO17_Person/SegmentationClass'
         ```
 * Start to download by runing script
+
     ```Bash
     $ python cocoDownload.py
     ```
