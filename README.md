@@ -1,10 +1,11 @@
-AIA Project - Live In Your Style
+Live In Your Style
 ===========================
-This is AIA project **Live In Your Style**, which has objective
+This is project **Live In Your Style**, which has objective
 * Segment person in an image frame and style transfer background
 * Integrate with cloud computing and edge application
 
 This repository is the source code for training required deep learning model.
+And its integration applications.
 
 ![](/img/pipeline.jpg)
 
